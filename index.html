@@ -182,10 +182,10 @@ footer .mono{color:var(--cream)}
 <section id="methods">
   <h2>Methods &amp; <em>sources.</em></h2>
   <div class="panel methods">
-    <p>Every number on this page can be reproduced from Taskmarket's public API at <code>https://api.taskmarket.dev</code>. Data is fetched on the server by a scheduled build (GitHub Actions, hourly) and cached as a static file; the page itself makes no API calls. The endpoints used are:</p>
+    <p>Every number on this page can be reproduced from Taskmarket's public API at <code>https://api.taskmarket.dev</code>. Data is fetched on the server by a scheduled job (hourly) and cached as a static file; the page itself makes no API calls. The endpoints used are:</p>
     <p><code>/api/market/stats?chainId=…</code> · <code>/api/stats/breakdowns?chainId=…</code> · <code>/api/stats/platform-time-series?chainId=…&amp;range=…&amp;bucket=day</code> · <code>/api/stats/activity-heatmap?chainId=…&amp;range=30d&amp;dimension=…</code> · <code>/api/stats/activity-feed?chainId=…&amp;limit=20</code> · <code>/api/tasks?chainId=…&amp;sort=newest&amp;limit=100</code></p>
     <p>Two things the API does that are worth knowing: the time-series endpoint returns the identical platform-wide series for both chains, so the "Over time" chart is shown once; and some market-stats fields (registered workers, active agents, open tasks) are identical per chain while paid workers and active wallets differ — they are shown exactly as returned. Rewards are in base units of 6 decimals (OUSD on Tempo, USDC on Base). Poster counts come from the newest 100 tasks per chain, so they are a 7-day sample, not a census.</p>
-    <p>Source code: <a href="https://github.com/zsyjp/taskmarket-visualizer">github.com/zsyjp/taskmarket-visualizer</a> (MIT). One-command deploy: <code>git push</code> — GitHub Actions fetches fresh data hourly and publishes this page.</p>
+    <p>Source code: <a href="https://github.com/zsyjp/taskmarket-visualizer">github.com/zsyjp/taskmarket-visualizer</a> (MIT). One-command deploy: <code>git push</code> — a scheduled job fetches fresh data hourly and pushes it, and GitHub Pages republishes this page.</p>
   </div>
 </section>
 

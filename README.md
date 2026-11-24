@@ -21,11 +21,14 @@ picture of what is happening on the market right now and over time.
 
 - One static page (`index.html`, vanilla HTML/CSS/JS, hand-rolled SVG charts).
   No build step, no tracking, no wallet connection, no external JS libraries.
-- Data is fetched on the server by a scheduled GitHub Actions workflow
-  (`.github/workflows/refresh.yml`, hourly cron) that runs
-  `scripts/fetch-data.mjs` (Node 20+, no dependencies) and publishes the
-  site to GitHub Pages. The page itself makes no API calls; it reads the
-  `data.json` the workflow baked.
+- Data is fetched on the server by a scheduled job (hourly) that runs
+  `scripts/fetch-data.mjs` (Node 20+, no dependencies) and pushes the fresh
+  `data.json`; GitHub Pages republishes on every push. The page itself makes
+  no API calls; it reads the `data.json` the job baked.
+- A GitHub Actions version of the same job is included as
+  `docs/github-actions-refresh.yml` for Taskmarket to use if it hosts the
+  dashboard itself; it is not live in this repo because the token used to
+  publish it has no `workflow` scope.
 - Fonts are Instrument Serif, Inter Tight and a monospace stack, loaded from
   Google Fonts with system fallbacks. Colours follow the Taskmarket brand kit
   (ground `#12100E`, magenta `#E74079` as the single accent). No brand-kit
@@ -69,9 +72,11 @@ One command, from a checkout of this repo:
 git push
 ```
 
-The `refresh.yml` workflow runs on push and hourly, fetches fresh data, and
-publishes to GitHub Pages. First-time setup only: create the repo, enable
-GitHub Pages with "GitHub Actions" as the source, and push.
+A scheduled job fetches fresh data hourly and pushes it; GitHub Pages
+republishes on every push. First-time setup only: create the repo, enable
+GitHub Pages with "Deploy from a branch" (main, /) as the source, and push.
+The `docs/github-actions-refresh.yml` file is the same job as a GitHub
+Actions workflow, for Taskmarket to use if it hosts the dashboard itself.
 
 ## Licence
 

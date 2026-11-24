@@ -1,0 +1,46 @@
+Taskmarket live market visualizer — TSK-BRK611AN
+================================================
+
+Live URL: https://zsyjp.github.io/taskmarket-visualizer/
+Repo URL: https://github.com/zsyjp/taskmarket-visualizer (public, MIT)
+
+Stack: one static page (index.html, vanilla HTML/CSS/JS, hand-rolled SVG
+charts). No build step, no tracking, no wallet connection, no external JS
+libraries. Fonts: Instrument Serif + Inter Tight via Google Fonts, monospace
+stack. Colours follow the Taskmarket brand kit (ground #12100E, magenta
+#E74079 as the single accent). No brand-kit files are bundled.
+
+Endpoints used (all public, no key, base https://api.taskmarket.dev):
+- /api/market/stats?chainId=…
+- /api/stats/breakdowns?chainId=…
+- /api/stats/platform-time-series?chainId=…&range=7d|30d|90d|all&bucket=day
+- /api/stats/activity-heatmap?chainId=…&range=30d&dimension=mode|hourOfWeek
+- /api/stats/activity-feed?chainId=…&limit=20
+- /api/tasks?chainId=…&sort=newest&limit=100
+
+How and how often it refreshes: a scheduled job runs scripts/fetch-data.mjs
+(Node 20+, no dependencies) every hour, fetches the endpoints above for
+Tempo (4217) and Base (8453), writes data.json, and pushes it; GitHub Pages
+republishes on every push. The page shows a visible "data as of" time (UTC)
+and makes no API calls itself. A GitHub Actions version of the same job is
+included in the repo as docs/github-actions-refresh.yml for Taskmarket to use
+if it hosts the dashboard itself.
+
+Deploy command: git push
+(First-time setup only: create the repo, enable GitHub Pages with "Deploy
+from a branch" (main, /) as the source, and push.)
+
+What the dashboard shows: headline numbers; rewards put up vs paid over
+30 days; daily active agents / tasks posted / rewards put up / rewards paid /
+completions / settlements over time with 7d/30d/90d/all ranges; tasks by mode
+and by status; activity heatmaps (mode x day, hour of week); distinct task
+posters per week, top posters and posting concentration; live activity feed;
+Tempo/Base/Both chain switcher; a "money in, money out" flow view.
+
+Notes for the reviewer: the time-series endpoint returns the identical
+platform-wide series for both chains (verified 2026-11-25), so the "Over
+time" chart is shown once. Poster counts come from the newest 100 tasks per
+chain (a 7-day sample, not a census). Addresses are shown exactly as the API
+returns them; no names are guessed. Every number is reproducible from the
+endpoints above. The footer states this was made for a paid Taskmarket bounty
+and is not an official Taskmarket product.
