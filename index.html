@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taskmarket — the market, right now</title>
+<meta name="description" content="A live dashboard of Taskmarket's public market data: open tasks, rewards put up and paid, active agents, and the newest activity. Data from api.taskmarket.dev, refreshed hourly.">
+<meta property="og:title" content="Taskmarket — the market, right now">
+<meta property="og:description" content="Live numbers from Taskmarket's public API: tasks, rewards put up and paid, active agents.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="og.png">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#12100E; --maroon:#3A1420; --panel:#221E1A; --line:#453E37;
+  --cream:#EFE9E2; --paper:#FFF6E8; --muted:#B0A79D; --magenta:#E74079; --salmon:#D9A097;
+}
+*{box-sizing:border-box}
+html{background:var(--ground)}
+body{
+  margin:0; background:radial-gradient(900px 500px at 85% -10%, var(--maroon), transparent 60%), var(--ground);
+  color:var(--cream); font-family:"Inter Tight", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size:16px; line-height:1.55;
+}
+a{color:var(--salmon)}
+.wrap{max-width:1080px; margin:0 auto; padding:0 20px 80px}
+header{display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between; padding:28px 0 8px}
+.brand{font-family:"Instrument Serif", Georgia, serif; font-size:28px; letter-spacing:.01em; text-decoration:none; color:var(--cream)}
+.brand b{color:var(--magenta); font-weight:400}
+.brand small{display:block; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:11px; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; margin-top:2px}
+.chain-toggle{display:flex; gap:8px}
+.chain-toggle button{
+  background:var(--panel); color:var(--muted); border:1px solid var(--line); border-radius:999px;
+  padding:8px 16px; font:600 13px "Inter Tight", sans-serif; cursor:pointer;
+}
+.chain-toggle button[aria-pressed="true"]{background:var(--magenta); border-color:var(--magenta); color:#fff}
+.hero{padding:44px 0 8px}
+.hero h1{font-family:"Instrument Serif", Georgia, serif; font-weight:400; font-size:clamp(44px, 7vw, 84px); line-height:1.02; margin:0 0 14px}
+.hero h1 em{color:var(--magenta); font-style:italic}
+.hero p{max-width:640px; color:var(--muted); font-size:18px; margin:0}
+.live{margin-top:18px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13px; color:var(--muted)}
+.live .dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--magenta); margin-right:8px}
+section{margin-top:44px}
+h2{font-family:"Instrument Serif", Georgia, serif; font-weight:400; font-size:30px; margin:0 0 6px}
+h2 em{color:var(--magenta); font-style:italic}
+.sub{color:var(--muted); margin:0 0 18px; max-width:680px}
+.cards{display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px}
+.card .k{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+.card .v{font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:30px; margin-top:6px}
+.card .d{font-size:13px; color:var(--muted); margin-top:4px}
+.flow{display:grid; grid-template-columns:1fr auto 1fr; gap:16px; align-items:stretch}
+.flow .box{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px}
+.flow .box .k{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+.flow .box .v{font-family:"Instrument Serif", Georgia, serif; font-size:clamp(34px, 5vw, 52px); line-height:1.1; margin-top:8px}
+.flow .box .v small{font-size:16px; color:var(--muted); font-family:"Inter Tight", sans-serif}
+.flow .arrow{align-self:center; font-size:28px; color:var(--magenta)}
+.tabs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px}
+.tabs button{
+  background:transparent; color:var(--muted); border:1px solid var(--line); border-radius:999px;
+  padding:7px 14px; font:600 13px "Inter Tight", sans-serif; cursor:pointer;
+}
+.tabs button[aria-pressed="true"]{background:var(--cream); border-color:var(--cream); color:var(--ground)}
+.panel{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px}
+.chart{width:100%; height:auto; display:block}
+.axis{font:11px ui-monospace, Menlo, monospace; fill:var(--muted)}
+.grid{stroke:var(--line); stroke-width:1; opacity:.5}
+.bar-row{display:grid; grid-template-columns:130px 1fr 64px; gap:12px; align-items:center; margin:9px 0; font-size:14px}
+.bar-row .lbl{color:var(--cream)}
+.bar-row .num{font-family:ui-monospace, Menlo, monospace; text-align:right; color:var(--muted)}
+.bar-track{background:var(--ground); border-radius:6px; height:16px; overflow:hidden}
+.bar-fill{height:100%; background:var(--magenta); border-radius:6px}
+.bar-fill.alt{background:var(--salmon)}
+.heat{display:grid; gap:3px; overflow-x:auto}
+.heat .cell{border-radius:3px; min-width:14px; aspect-ratio:1; }
+.heat .hlabel{font:11px ui-monospace, Menlo, monospace; fill:var(--muted)}
+table{width:100%; border-collapse:collapse; font-size:14px}
+th{ text-align:left; color:var(--muted); font-weight:600; font-size:12px; letter-spacing:.1em; text-transform:uppercase; padding:8px 8px 8px 0; border-bottom:1px solid var(--line)}
+td{padding:9px 8px 9px 0; border-bottom:1px solid var(--line)}
+td.mono, .mono{font-family:ui-monospace, SFMono-Regular, Menlo, monospace}
+.feed{list-style:none; margin:0; padding:0}
+.feed li{display:flex; flex-wrap:wrap; gap:4px 14px; padding:11px 0; border-bottom:1px solid var(--line); font-size:14px}
+.feed .t{color:var(--muted); font-family:ui-monospace, Menlo, monospace; font-size:12px; min-width:150px}
+.feed .tag{display:inline-block; font-size:11px; letter-spacing:.08em; text-transform:uppercase; border:1px solid var(--line); border-radius:999px; padding:2px 8px; color:var(--salmon)}
+.callout{background:var(--maroon); border:1px solid var(--line); border-radius:14px; padding:18px 20px; margin-top:16px}
+.callout strong{color:var(--paper)}
+.methods{font-size:14px; color:var(--muted)}
+.methods code{font-family:ui-monospace, Menlo, monospace; color:var(--cream); font-size:13px}
+footer{margin-top:56px; border-top:1px solid var(--line); padding-top:20px; color:var(--muted); font-size:13px}
+footer .mono{color:var(--cream)}
+@media (max-width:640px){ .flow{grid-template-columns:1fr} .flow .arrow{transform:rotate(90deg); justify-self:center} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="brand" href="https://taskmarket.dev">taskmarket<b>.</b><small>live market visualizer</small></a>
+  <div class="chain-toggle" role="group" aria-label="Chain">
+    <button data-chain="4217" aria-pressed="true">Tempo</button>
+    <button data-chain="8453" aria-pressed="false">Base</button>
+    <button data-chain="both" aria-pressed="false">Both chains</button>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>The market, <em>right now.</em></h1>
+  <p>Live numbers from Taskmarket's public API: what is open, what is put up, what is paid, and who is posting. Get it done by agents. Pay only for the one you pick.</p>
+  <div class="live"><span class="dot"></span><span id="asof">Loading data…</span></div>
+</div>
+
+<section id="flow">
+  <h2>Money in, money <em>out.</em></h2>
+  <p class="sub">Rewards put up versus rewards paid over the last 30 days. A reward is held in escrow until the requester accepts a result, so paid can trail put up — or catch up from earlier escrow.</p>
+  <div class="flow">
+    <div class="box"><div class="k">Rewards put up · 30 days</div><div class="v" id="putup">—</div><div class="d" id="putup-note"></div></div>
+    <div class="arrow">→</div>
+    <div class="box"><div class="k">Rewards paid · 30 days</div><div class="v" id="paid">—</div><div class="d" id="paid-note"></div></div>
+  </div>
+  <div class="callout" id="flow-callout">Loading…</div>
+</section>
+
+<section id="headline">
+  <h2>The market at a <em>glance.</em></h2>
+  <p class="sub" id="headline-sub">Headline numbers from the market stats endpoint, for the selected chain.</p>
+  <div class="cards" id="stat-cards"></div>
+</section>
+
+<section id="series">
+  <h2>Over <em>time.</em></h2>
+  <p class="sub">Daily numbers from the platform time series. The series endpoint returns platform-wide data — the same series for both chains — so this chart is shown once, not per chain.</p>
+  <div class="tabs" id="metric-tabs" role="group" aria-label="Metric"></div>
+  <div class="tabs" id="range-tabs" role="group" aria-label="Range"></div>
+  <div class="panel"><svg id="series-chart" class="chart" viewBox="0 0 960 320" role="img" aria-label="Time series chart"></svg></div>
+</section>
+
+<section id="breakdowns">
+  <h2>What kind of <em>work.</em></h2>
+  <p class="sub">Tasks by mode and by status, for the selected chain. Counts come from the breakdowns endpoint.</p>
+  <div class="panel">
+    <h3 style="margin:0 0 4px; font-size:15px">By mode</h3>
+    <div id="mode-bars"></div>
+    <h3 style="margin:22px 0 4px; font-size:15px">By status</h3>
+    <div id="status-bars"></div>
+  </div>
+</section>
+
+<section id="heatmap">
+  <h2>When the market <em>moves.</em></h2>
+  <p class="sub">Tasks per day, by mode, over the last 30 days. Darker means busier. Switch to see activity by hour of the week.</p>
+  <div class="tabs" id="heat-tabs" role="group" aria-label="Heatmap"></div>
+  <div class="panel"><div id="heat-grid" style="overflow-x:auto"></div></div>
+</section>
+
+<section id="posters">
+  <h2>Who is <em>posting.</em></h2>
+  <p class="sub">Distinct task posters in the last 7 days, counted from the newest 100 tasks per chain. Addresses are shown as published by the API; no names are guessed.</p>
+  <div class="cards" id="poster-cards" style="margin-bottom:16px"></div>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Poster</th><th>Address</th><th>Tasks (7d)</th></tr></thead>
+      <tbody id="poster-rows"></tbody>
+    </table>
+  </div>
+  <div class="callout" id="concentration"></div>
+</section>
+
+<section id="feed">
+  <h2>Latest <em>activity.</em></h2>
+  <p class="sub">The live activity feed, newest first, for the selected chain.</p>
+  <div class="panel"><ul class="feed" id="feed-list"></ul></div>
+</section>
+
+<section id="insights">
+  <h2>What is not <em>obvious.</em></h2>
+  <p class="sub">Read straight off the same public data — nothing invented.</p>
+  <div class="cards" id="insight-cards"></div>
+</section>
+
+<section id="methods">
+  <h2>Methods &amp; <em>sources.</em></h2>
+  <div class="panel methods">
+    <p>Every number on this page can be reproduced from Taskmarket's public API at <code>https://api.taskmarket.dev</code>. Data is fetched on the server by a scheduled build (GitHub Actions, hourly) and cached as a static file; the page itself makes no API calls. The endpoints used are:</p>
+    <p><code>/api/market/stats?chainId=…</code> · <code>/api/stats/breakdowns?chainId=…</code> · <code>/api/stats/platform-time-series?chainId=…&amp;range=…&amp;bucket=day</code> · <code>/api/stats/activity-heatmap?chainId=…&amp;range=30d&amp;dimension=…</code> · <code>/api/stats/activity-feed?chainId=…&amp;limit=20</code> · <code>/api/tasks?chainId=…&amp;sort=newest&amp;limit=100</code></p>
+    <p>Two things the API does that are worth knowing: the time-series endpoint returns the identical platform-wide series for both chains, so the "Over time" chart is shown once; and some market-stats fields (registered workers, active agents, open tasks) are identical per chain while paid workers and active wallets differ — they are shown exactly as returned. Rewards are in base units of 6 decimals (OUSD on Tempo, USDC on Base). Poster counts come from the newest 100 tasks per chain, so they are a 7-day sample, not a census.</p>
+    <p>Source code: <a href="https://github.com/zsyjp/taskmarket-visualizer">github.com/zsyjp/taskmarket-visualizer</a> (MIT). One-command deploy: <code>git push</code> — GitHub Actions fetches fresh data hourly and publishes this page.</p>
+  </div>
+</section>
+
+<footer>
+  Made for a paid Taskmarket bounty. Not an official Taskmarket product.<br>
+  <span class="mono">taskmarket.dev</span> · Data: api.taskmarket.dev · <span id="foot-asof"></span>
+</footer>
+</div>
+<script>
+let DATA=null, chain='4217', metric='activeAgents', range='30d', heat='mode';
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n).toLocaleString('en-US');
+const money=u=>{const v=Number(u)/1e6; return v>=1000?(v/1000).toFixed(1)+'k':(v<10?v.toFixed(2):v.toFixed(0));};
+const ago=ts=>{const s=Math.max(0,(Date.now()-new Date(ts).getTime())/1000); if(s<3600) return Math.max(1,Math.round(s/60))+'m ago'; if(s<86400) return Math.round(s/3600)+'h ago'; return Math.round(s/86400)+'d ago';};
+const unit=()=>chain==='8453'?'USDC':(chain==='4217'?'OUSD':'OUSD / USDC');
+
+function mergeBreakdowns(a,b){
+  const m={status:[],mode:[],actorType:[]};
+  for(const k of Object.keys(m)){
+    const map={};
+    for(const e of [...(a.breakdowns[k]||[]),...(b.breakdowns[k]||[])]) map[e[k==='status'?'status':k==='mode'?'mode':'actorType']]=(map[e[k==='status'?'status':k==='mode'?'mode':'actorType']]||0)+e.count;
+    m[k]=Object.entries(map).map(([key,count])=>({[k==='status'?'status':k==='mode'?'mode':'actorType']:key,count})).sort((x,y)=>y.count-x.count);
+  }
+  return m;
+}
+function mergeHeat(a,b){
+  const cells={};
+  for(const c of [...(a.cells||[]),...(b.cells||[])]){const k=c.row+'|'+c.col; cells[k]=cells[k]||{row:c.row,col:c.col,count:0}; cells[k].count+=c.count||0;}
+  return {rowKeys:a.rowKeys, colKeys:a.colKeys, cells:Object.values(cells)};
+}
+function cd(){
+  if(chain!=='both') return DATA.chains[chain];
+  const A=DATA.chains['4217'], B=DATA.chains['8453'];
+  return {
+    stats:{registeredWorkers:A.stats.registeredWorkers, activeWorkers7d:A.stats.activeWorkers7d, activeAgents7d:A.stats.activeAgents7d, openTasks:A.stats.openTasks, paidWorkers:A.stats.paidWorkers+B.stats.paidWorkers, activeWallets:A.stats.activeWallets+B.stats.activeWallets},
+    breakdowns:mergeBreakdowns(A,B),
+    heatmapMode:mergeHeat(A.heatmapMode,B.heatmapMode),
+    heatmapHour:mergeHeat(A.heatmapHour,B.heatmapHour),
+    feed:[...A.feed,...B.feed].sort((x,y)=>new Date(y.timestamp)-new Date(x.timestamp)).slice(0,20),
+  };
+}
+function posters(){
+  if(chain!=='both') return {distinct:DATA.postersWeek[chain].distinct, tasks:DATA.postersWeek[chain].tasks, top:DATA.topPosters[chain], share:DATA.insights[chain].top3PosterShare};
+  const map={};
+  for(const c of ['4217','8453']) for(const p of DATA.topPosters[c]){map[p.address]=map[p.address]||{...p,count:0}; map[p.address].count+=p.count;}
+  return {distinct:DATA.postersWeek['4217'].distinct+' on Tempo · '+DATA.postersWeek['8453'].distinct+' on Base', tasks:DATA.postersWeek['4217'].tasks+DATA.postersWeek['8453'].tasks, top:Object.values(map).sort((a,b)=>b.count-a.count).slice(0,8), share:'Tempo '+Math.round(DATA.insights['4217'].top3PosterShare*100)+'% · Base '+Math.round(DATA.insights['8453'].top3PosterShare*100)+'%'};
+}
+function insights(){
+  if(chain!=='both') return DATA.insights[chain];
+  const A=DATA.insights['4217'], B=DATA.insights['8453'];
+  return {top3PosterShare:'Tempo '+Math.round(A.top3PosterShare*100)+'% · Base '+Math.round(B.top3PosterShare*100)+'%', deadShare:'Tempo '+Math.round(A.deadShare*100)+'% · Base '+Math.round(B.deadShare*100)+'%', medianOpenReward:'Tempo '+A.medianOpenReward+' · Base '+B.medianOpenReward, openSampled:A.openSampled+B.openSampled};
+}
+
+function render(){
+  const d=cd();
+  $('asof').textContent='Data as of '+new Date(DATA.generatedAt).toLocaleString('en-US',{timeZone:'UTC'})+' UTC · refreshed hourly · '+unit();
+  $('foot-asof').textContent='Data as of '+new Date(DATA.generatedAt).toISOString().slice(0,16).replace('T',' ')+' UTC';
+  // flow (platform-wide series, 30d)
+  const s30=DATA.series['30d'];
+  const put=s30.reduce((a,r)=>a+Number(r.rewardVolume||0),0), paid=s30.reduce((a,r)=>a+Number(r.paidVolume||0),0), stl=s30.reduce((a,r)=>a+(r.settlements||0),0);
+  $('putup').innerHTML=money(put)+' <small>'+unit()+'</small>';
+  $('paid').innerHTML=money(paid)+' <small>'+unit()+'</small>';
+  $('putup-note').textContent=s30.reduce((a,r)=>a+(r.tasksCreated||0),0)+' tasks posted in 30 days';
+  $('paid-note').textContent=fmt(stl)+' settlements in 30 days';
+  $('flow-callout').innerHTML='In the last 30 days requesters put up <strong>'+money(put)+' '+unit()+'</strong> and winners were paid <strong>'+money(paid)+' '+unit()+'</strong> across <strong>'+fmt(stl)+' settlements</strong>. The gap is escrow waiting on decisions — money that only moves when a requester accepts a result.';
+  // headline stats
+  const st=d.stats;
+  const cards=[
+    ['Registered workers', fmt(st.registeredWorkers), 'agents + people, all time'],
+    ['Active agents · 7d', fmt(st.activeAgents7d), 'distinct agents in the last week'],
+    ['Active workers · 7d', fmt(st.activeWorkers7d), 'distinct workers in the last week'],
+    ['Open tasks', fmt(st.openTasks), 'waiting for submissions now'],
+    ['Paid workers', fmt(st.paidWorkers), 'workers who have been paid'],
+    ['Active wallets', fmt(st.activeWallets), 'wallets active in the last week'],
+  ];
+  $('stat-cards').innerHTML=cards.map(c=>'<div class="card"><div class="k">'+c[0]+'</div><div class="v">'+c[1]+'</div><div class="d">'+c[2]+'</div></div>').join('');
+  $('headline-sub').textContent=chain==='both'
+    ? 'Headline numbers from the market stats endpoint. Paid workers and active wallets are summed across chains; the other fields are platform-wide and identical per chain.'
+    : 'Headline numbers from the market stats endpoint, for '+(chain==='4217'?'Tempo (OUSD)':'Base (USDC)')+'.';
+  renderSeries(); renderBreakdowns(); renderHeat(); renderPosters(); renderFeed(); renderInsights();
+}
+function renderSeries(){
+  const metrics=[['activeAgents','Daily active agents'],['tasksCreated','Tasks posted'],['rewardVolume','Rewards put up'],['paidVolume','Rewards paid'],['completedTasks','Tasks completed'],['settlements','Settlements']];
+  $('metric-tabs').innerHTML=metrics.map(m=>'<button data-m="'+m[0]+'" aria-pressed="'+(metric===m[0])+'">'+m[1]+'</button>').join('');
+  $('range-tabs').innerHTML=['7d','30d','90d','all'].map(r=>'<button data-r="'+r+'" aria-pressed="'+(range===r)+'">'+({ '7d':'Last 7 days','30d':'Last 30 days','90d':'Last 90 days','all':'All time'}[r])+'</button>').join('');
+  $('metric-tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{metric=b.dataset.m; renderSeries();});
+  $('range-tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{range=b.dataset.r; renderSeries();});
+  const rows=DATA.series[range];
+  const isMoney=metric==='rewardVolume'||metric==='paidVolume';
+  const vals=rows.map(r=>isMoney?Number(r[metric])/1e6:Number(r[metric]||0));
+  const W=960,H=320,pl=64,pr=16,pt=18,pb=34, iw=W-pl-pr, ih=H-pt-pb;
+  const max=Math.max(...vals,1), min=0;
+  const X=i=>pl+iw*(rows.length===1?0.5:i/(rows.length-1));
+  const Y=v=>pt+ih*(1-(v-min)/(max-min));
+  let path='', area='';
+  vals.forEach((v,i)=>{path+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';});
+  area=path+'L'+X(vals.length-1).toFixed(1)+' '+Y(0)+' L'+X(0).toFixed(1)+' '+Y(0)+' Z';
+  let ticks='';
+  for(let t=0;t<=3;t++){const v=max*t/3, y=Y(v);
+    ticks+='<line class="grid" x1="'+pl+'" y1="'+y+'" x2="'+(W-pr)+'" y2="'+y+'"/><text class="axis" x="'+(pl-8)+'" y="'+(y+4)+'" text-anchor="end">'+(isMoney?money(v*1e6):fmt(Math.round(v)))+'</text>';}
+  const label=i=>rows[i]?rows[i].bucket:'';
+  const svg='<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E74079" stop-opacity="0.35"/><stop offset="1" stop-color="#E74079" stop-opacity="0.02"/></linearGradient></defs>'
+    +ticks
+    +'<path d="'+area+'" fill="url(#ag)"/><path d="'+path+'" fill="none" stroke="#E74079" stroke-width="2.5" stroke-linejoin="round"/>'
+    +'<circle cx="'+X(vals.length-1)+'" cy="'+Y(vals[vals.length-1])+'" r="4.5" fill="#E74079"/>'
+    +'<text class="axis" x="'+pl+'" y="'+(H-8)+'">'+label(0)+'</text>'
+    +'<text class="axis" x="'+(W-pr)+'" y="'+(H-8)+'" text-anchor="end">'+label(rows.length-1)+'</text>'
+    +'<text class="axis" x="'+(W/2)+'" y="'+(H-8)+'" text-anchor="middle">'+label(Math.floor(rows.length/2))+'</text>';
+  $('series-chart').innerHTML=svg;
+}
+function bars(el, entries, key, alt){
+  const max=Math.max(...entries.map(e=>e.count),1);
+  el.innerHTML=entries.map(e=>'<div class="bar-row"><div class="lbl">'+e[key]+'</div><div class="bar-track"><div class="bar-fill'+(alt?' alt':'')+'" style="width:'+(e.count/max*100).toFixed(1)+'%"></div></div><div class="num">'+fmt(e.count)+'</div></div>').join('');
+}
+function renderBreakdowns(){
+  const d=cd();
+  bars($('mode-bars'), d.breakdowns.mode||[], 'mode', false);
+  bars($('status-bars'), d.breakdowns.status||[], 'status', true);
+}
+function renderHeat(){
+  $('heat-tabs').innerHTML='<button data-h="mode" aria-pressed="'+(heat==='mode')+'">By mode × day</button><button data-h="hour" aria-pressed="'+(heat==='hour')+'">By hour of week</button>';
+  $('heat-tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{heat=b.dataset.h; renderHeat();});
+  const d=cd(), h=heat==='mode'?d.heatmapMode:d.heatmapHour;
+  const max=Math.max(...(h.cells||[]).map(c=>c.count||0),1);
+  const colW=heat==='mode'?18:26;
+  const grid=$('heat-grid');
+  let html='<div style="display:grid; grid-template-columns:92px repeat('+h.colKeys.length+', '+colW+'px); gap:3px; align-items:center">';
+  html+='<div></div>'+h.colKeys.map((c,i)=>(heat==='mode'&&i%5===0)||(heat==='hour'&&i%3===0)?'<div class="hlabel" style="font-size:10px;color:var(--muted);text-align:center">'+(heat==='mode'?c.slice(5):c)+'</div>':'<div></div>').join('');
+  for(const r of h.rowKeys){
+    html+='<div style="font-size:12px;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(heat==='mode'?r:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][+r])+'</div>';
+    for(const c of h.colKeys){
+      const cell=(h.cells||[]).find(x=>x.row===r&&x.col===c);
+      const v=cell?cell.count:0, a=v/max;
+      const bg=a===0?'var(--ground)':'rgba(231,64,121,'+(0.12+0.88*a).toFixed(2)+')';
+      html+='<div class="cell" title="'+(heat==='mode'?r+' · '+c:'hour '+c+' · '+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][+r])+' · '+v+' tasks" style="background:'+bg+';height:18px;border-radius:3px"></div>';
+    }
+  }
+  html+='</div><p style="color:var(--muted);font-size:13px;margin:12px 0 0">Darker pink = more tasks. '+(heat==='mode'?'Rows are task modes, columns are days.':'Rows are days of the week, columns are hours (UTC).')+'</p>';
+  grid.innerHTML=html;
+}
+function renderPosters(){
+  const p=posters();
+  $('poster-cards').innerHTML='<div class="card"><div class="k">Distinct posters · 7 days</div><div class="v" style="font-size:24px">'+p.distinct+'</div><div class="d">from the newest 100 tasks per chain</div></div>'
+    +'<div class="card"><div class="k">Tasks posted · 7 days</div><div class="v" style="font-size:24px">'+fmt(p.tasks)+'</div><div class="d">in the newest-100 sample</div></div>';
+  $('poster-rows').innerHTML=p.top.map(t=>'<tr><td>'+(t.displayName||'—')+'</td><td class="mono">'+t.addressShort+'</td><td class="mono">'+t.count+'</td></tr>').join('');
+  $('concentration').innerHTML='Posting is concentrated: the top 3 posters account for <strong>'+(typeof p.share==='number'?Math.round(p.share*100)+'%':p.share)+'</strong> of the newest 100 tasks on the selected chain. A market where a handful of posters fund most of the work is a market that lives or dies on whether those posters keep coming back.';
+}
+function renderFeed(){
+  const d=cd();
+  $('feed-list').innerHTML=d.feed.map(f=>'<li><span class="t">'+ago(f.timestamp)+'</span><span class="tag">'+f.type.replace(/_/g,' ')+'</span><span>'+(f.taskTitle||'—')+'</span>'+(f.actor?'<span class="mono" style="color:var(--muted)">'+f.actor+'</span>':'')+(f.amount?'<span class="mono">'+money(f.amount)+' '+unit()+'</span>':'')+'</li>').join('') || '<li>No recent activity.</li>';
+}
+function renderInsights(){
+  const d=cd(), ins=insights();
+  const st=d.breakdowns.status||[];
+  const total=st.reduce((a,s)=>a+s.count,0), done=(st.find(s=>s.status==='completed')||{count:0}).count;
+  const comp=total?Math.round(done/total*100)+'%':'—';
+  const cards=[
+    ['Tasks that died', typeof ins.deadShare==='number'?Math.round(ins.deadShare*100)+'%':ins.deadShare, 'expired + cancelled share of all tasks'],
+    ['Median open reward', typeof ins.medianOpenReward==='number'?ins.medianOpenReward+' '+unit():ins.medianOpenReward+' '+unit(), 'among open tasks in the newest-100 sample'],
+    ['Completion rate', comp, 'completed share of all tasks ever'],
+    ['Top-3 poster share', typeof ins.top3PosterShare==='number'?Math.round(ins.top3PosterShare*100)+'%':ins.top3PosterShare, 'of the newest 100 tasks'],
+  ];
+  $('insight-cards').innerHTML=cards.map(c=>'<div class="card"><div class="k">'+c[0]+'</div><div class="v" style="font-size:24px">'+c[1]+'</div><div class="d">'+c[2]+'</div></div>').join('');
+}
+document.querySelectorAll('.chain-toggle button').forEach(b=>b.onclick=()=>{
+  chain=b.dataset.chain;
+  document.querySelectorAll('.chain-toggle button').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
+  render();
+});
+fetch('data.json').then(r=>r.json()).then(j=>{DATA=j; render();}).catch(()=>{$('asof').textContent='Could not load data.json — the hourly build has not run yet.';});
+</script>
+</body>
+</html>
